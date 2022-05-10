@@ -23,16 +23,21 @@ let token: string = '';
 let postId: string = '';
 let postIdToDelete: string = '';
 let commentIdToDelete: string = '';
+let commentId: string = '';
+let commentCounter = 0;
+let likeCounterPost = 0;
+let likeCounterComment = 0;
 /* END   - VARS for testing */
-jest.setTimeout(9999);
 beforeAll(async () => {
-  await Post.deleteMany({});
-  await User.deleteMany({});
-  // await Comment.deleteMany({});
-  // await Like.deleteMany({});
+  Promise.all([
+    Post.deleteMany({}),
+    User.deleteMany({}),
+    Comment.deleteMany({}),
+    Like.deleteMany({}),
+  ]);
 });
 
-test('Register', async () => {
+test('User 1 - Register', async () => {
   const { body } = await api
     .post('/api/users/')
     .send({
@@ -45,7 +50,7 @@ test('Register', async () => {
   expect(body.username).toBe(user.username);
 });
 
-test('Login', async () => {
+test('User 2 - Login', async () => {
   const { body } = await api
     .post('/api/users/login')
     .send({
@@ -58,7 +63,7 @@ test('Login', async () => {
   token = body.token;
 });
 
-test('Post a Post', async () => {
+test('Post 1 - Post a Post to delete', async () => {
   const { body } = await api
     .post('/api/posts/')
     .set('Authorization', 'Bearer ' + token)
@@ -74,7 +79,7 @@ test('Post a Post', async () => {
   expect(body.content).toBe(post.content);
 });
 
-test('Delete a Post', async () => {
+test('Post 2 - Delete a Post', async () => {
   await api
     .delete(`/api/posts/${postIdToDelete}`)
     .set('Authorization', 'Bearer ' + token)
@@ -82,7 +87,7 @@ test('Delete a Post', async () => {
     .expect('Content-Type', /application\/json/);
 });
 
-test('Post a Post', async () => {
+test('Post 3 - Post a Post', async () => {
   const { body } = await api
     .post('/api/posts/')
     .set('Authorization', 'Bearer ' + token)
@@ -98,7 +103,7 @@ test('Post a Post', async () => {
   expect(body.content).toBe(post.content);
 });
 
-test('Get Posts', async () => {
+test('Post 4 - Get Posts', async () => {
   const { body } = await api
     .get('/api/posts?page=1&limit=5')
     .set('Authorization', 'Bearer ' + token)
@@ -107,15 +112,15 @@ test('Get Posts', async () => {
   expect(body.results).toHaveLength(1);
 });
 
-test('Get Post by id', async () => {
+test('Post 5 - Get Post by id', async () => {
   const { body } = await api
     .get(`/api/posts/${postId}`)
     .expect(200)
     .expect('Content-Type', /application\/json/);
-  expect(body.content).toBe(post.content);
+  expect(body.post.content).toBe(post.content);
 });
 
-test('Put Post', async () => {
+test('Post 6 - Put Post', async () => {
   const { body } = await api
     .put(`/api/posts/${postId}`)
     .set('Authorization', 'Bearer ' + token)
@@ -127,7 +132,8 @@ test('Put Post', async () => {
   expect(body.title).toBe('testing the PUT');
 });
 
-test('Post Comment', async () => {
+test('Comment 1 - Post a Comment', async () => {
+  //fetch the comment to delete
   const { body } = await api
     .post(`/api/posts/${postId}/comments/`)
     .set('Authorization', 'Bearer ' + token)
@@ -136,21 +142,80 @@ test('Post Comment', async () => {
     })
     .expect(201)
     .expect('Content-Type', /application\/json/);
-  expect(body.content).toBe('a comment');
+  commentIdToDelete = body.comment._id;
+
+  //create another comment
+  const res = await api
+    .post(`/api/posts/${postId}/comments/`)
+    .set('Authorization', 'Bearer ' + token)
+    .send({
+      content: 'a comment',
+    })
+    .expect(201)
+    .expect('Content-Type', /application\/json/);
+  commentId = res.body.comment._id;
+  expect(res.body.comment.content).toBe('a comment');
+  //create 2
+  commentCounter = commentCounter + 2;
+  expect(res.body.commentCounter).toBe(commentCounter);
 });
 
-test('Delete Comment', async () => {
+test('Comment 2 - Delete a Comment', async () => {
   const { body } = await api
-    .post(`/api/posts/${postId}/comments/${commentIdToDelete}`)
+    .delete(`/api/posts/${postId}/comments/${commentIdToDelete}`)
+    .set('Authorization', 'Bearer ' + token)
+    .expect(200)
+    .expect('Content-Type', /application\/json/);
+  //delete one
+  commentCounter = commentCounter - 1;
+  expect(body.commentCounter).toBe(commentCounter);
+});
+
+test('Like/Post 1 - Post ', async () => {
+  const { body } = await api
+    .post(`/api/posts/${postId}/like/`)
     .set('Authorization', 'Bearer ' + token)
     .expect(201)
     .expect('Content-Type', /application\/json/);
-  expect(body.content).toBe('a comment');
+  likeCounterPost++;
+  expect(body.likeCounter).toBe(likeCounterPost);
+  expect(body.likedPosts).toEqual([postId]);
 });
-// test('Post Like-post', async () => {});
-// test('Delete Like-post', async () => {});
-// test('Post Like-comment', async () => {});
-// test('Delete Like-comment', async () => {});
+
+test('Like/Post 2 - Delete ', async () => {
+  const { body } = await api
+    .delete(`/api/posts/${postId}/like/`)
+    .set('Authorization', 'Bearer ' + token)
+    .expect(200)
+    .expect('Content-Type', /application\/json/);
+  likeCounterPost--;
+
+  expect(body.likeCounter).toBe(likeCounterPost);
+  expect(body.likedPosts).toEqual([]);
+});
+
+test('Like/Comment 3 - Post ', async () => {
+  const { body } = await api
+    .post(`/api/posts/${postId}/comments/${commentId}/like`)
+    .set('Authorization', 'Bearer ' + token)
+    .expect(201)
+    .expect('Content-Type', /application\/json/);
+  likeCounterComment++;
+
+  expect(body.likeCounter).toBe(likeCounterComment);
+  expect(body.likedComments).toEqual([commentId]);
+});
+
+test('Like/Comment 4 - Delete ', async () => {
+  const { body } = await api
+    .delete(`/api/posts/${postId}/comments/${commentId}/like`)
+    .set('Authorization', 'Bearer ' + token)
+    .expect(200)
+    .expect('Content-Type', /application\/json/);
+  likeCounterComment--;
+  expect(body.likeCounter).toBe(likeCounterComment);
+  expect(body.likedComments).toEqual([]);
+});
 
 afterAll(() => {
   server.close();

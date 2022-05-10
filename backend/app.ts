@@ -14,6 +14,7 @@ declare global {
         iat: number;
         exp: number;
         name: string;
+        isAdmin: boolean;
       };
     }
   }

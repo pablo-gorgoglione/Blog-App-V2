@@ -3,11 +3,16 @@ import { Response, Request } from 'express';
 import Post from '../models/post';
 import { IPost } from '../types';
 import { paginatePosts } from '../utils/pagination';
+import { getCommentsForPost } from './commentController';
+import mongoose from 'mongoose';
+import Like from '../models/like';
+import Comment from '../models/comment';
 
 // @route GET /api/posts/
 // @acess Public
 export const getPosts = asyncHandler(async (req: Request, res: Response) => {
   const posts = await paginatePosts(Post, req);
+
   res.json(posts);
 });
 
@@ -25,6 +30,15 @@ export const getPostsNP = asyncHandler(async (req: Request, res: Response) => {
 export const postPost = asyncHandler(async (req: Request, res: Response) => {
   const { title, content, tags, isPublished } = req.body;
 
+  if (!title) {
+    throw new Error('A title is requiered.');
+  }
+  if (!tags) {
+    throw new Error('At least one tag is requiered.');
+  }
+  if (!content) {
+    throw new Error('A content is requiered.');
+  }
   const post = await Post.create({
     author: req.user?.id,
     title,
@@ -40,8 +54,23 @@ export const postPost = asyncHandler(async (req: Request, res: Response) => {
 // @acess Private
 export const deletePost = asyncHandler(async (req: Request, res: Response) => {
   const post = await searchPost(req.params.id);
-  await post.delete();
-  res.status(200).json({ message: 'Post deleted successfully' });
+
+  const session = await mongoose.startSession();
+  await session.startTransaction();
+  try {
+    await Like.deleteMany({ post: post._id }).session(session);
+    await Comment.deleteMany({ post: post._id }).session(session);
+    await post.delete(session);
+    // const users = await User.find({likedPosts:post._id})
+    await session.commitTransaction();
+    await session.endSession();
+    res.json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.log(error);
+    await session.abortTransaction();
+    await session.endSession();
+    throw new Error('Error deleting the post');
+  }
 });
 
 // @route PUT /api/posts/:id
@@ -62,7 +91,8 @@ export const putPost = asyncHandler(async (req: Request, res: Response) => {
 // @acess Public
 export const getPost = asyncHandler(async (req: Request, res: Response) => {
   const post = await searchPost(req.params.id);
-  res.json(post);
+  const comments = await getCommentsForPost(post._id);
+  res.json({ post, comments });
   return;
 });
 

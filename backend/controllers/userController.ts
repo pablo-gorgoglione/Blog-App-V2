@@ -8,7 +8,7 @@ import { IUser } from '../types';
 // @route POST /api/users/
 // @acess Public
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { username, password: pw, roleFromClient } = req.body;
+  const { username, password: pw, isAdmin = false } = req.body;
 
   const inUse = await User.findOne({ username });
   if (inUse) {
@@ -21,7 +21,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.create({
     username,
     password: hashPassword,
-    isAdmin: roleFromClient ? roleFromClient : false,
+    isAdmin: isAdmin,
   });
 
   const { password, ...userWithoutPassword } = user.toJSON();
@@ -47,8 +47,19 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
   res.status(401);
-
   throw new Error('Invalid username or password');
+});
+
+// @route GET /api/users/
+// @acess Private
+export const getUsers = asyncHandler(async (req: Request, res: Response) => {
+  const users: IUser[] = await User.find({});
+  const usersWithOutPassword = users.map((u) => {
+    const { password, ...restOfU } = u.toJSON();
+    return restOfU;
+  });
+  res.status(200).json(usersWithOutPassword);
+  return;
 });
 
 // @desc Return an User or throws an error for invalid id
@@ -62,4 +73,13 @@ export const searchUser = async (req: Request): Promise<IUser> => {
     throw new Error('User not found');
   }
   return user;
+};
+
+// return an arrays of the users that have the isAdmin = true
+export const getAdminUsers = async (): Promise<string[]> => {
+  const users: IUser[] = await User.find({ isAdmin: true });
+  const IdList: string[] = users.map((u) => {
+    return u.id;
+  });
+  return IdList;
 };

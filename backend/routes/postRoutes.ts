@@ -10,20 +10,20 @@ import {
   postPost,
   putPost,
 } from '../controllers/postController';
-import { protect } from '../middlewares/authentication';
+import { isAdmin, protect } from '../middlewares/authentication';
 import commentRotes from './commentRoutes';
 
 const router = express.Router();
 router
   .route('/:id')
-  .put(protect, putPost)
+  .put(protect, isAdmin, putPost)
   .get(getPost)
-  .delete(protect, deletePost);
+  .delete(protect, isAdmin, deletePost);
 router.use('/:id/comments/', commentRotes);
 router
   .route('/:id/like')
   .post(protect, postLikeOnPost)
   .delete(protect, deleteLikeOnPost);
-router.route('/').get(getPosts).post(protect, postPost);
+router.route('/').get(getPosts).post(protect, isAdmin, postPost);
 
 export default router;

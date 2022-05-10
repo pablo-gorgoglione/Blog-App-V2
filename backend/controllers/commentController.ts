@@ -1,9 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { Response, Request } from 'express';
 import Comment from '../models/comment';
-import mongoose, { ClientSession } from 'mongoose';
-import Post from '../models/post';
-import User from '../models/user';
+import mongoose from 'mongoose';
 import { searchUser } from './userController';
 import { searchPost } from './postController';
 import { IComment } from '../types';
@@ -12,10 +10,9 @@ import { IComment } from '../types';
 // @acess Private
 export const postComment = asyncHandler(async (req: Request, res: Response) => {
   const { content } = req.body;
-  const postId = req.params.id;
 
   const user = await searchUser(req);
-  const post = await searchPost(postId);
+  const post = await searchPost(req.params.id);
 
   const session = await mongoose.startSession();
   await session.startTransaction();
@@ -29,7 +26,7 @@ export const postComment = asyncHandler(async (req: Request, res: Response) => {
       [
         {
           user: user.id,
-          post: postId,
+          post: post._id,
           content,
         },
       ],
@@ -41,7 +38,9 @@ export const postComment = asyncHandler(async (req: Request, res: Response) => {
     await session.endSession();
 
     // the Comment.create returns an array<Comment> and so the comment[0]
-    res.status(201).json(comment[0]);
+    res
+      .status(201)
+      .json({ comment: comment[0], commentCounter: post.commentCounter });
   } catch (error) {
     console.log(error);
     await session.abortTransaction();
@@ -58,6 +57,7 @@ export const deleteComment = asyncHandler(
     const comment = await searchComment(req.params.commentId);
     const post = await searchPost(req.params.id);
 
+    // validate if the user that is trying to delete is the author of the comment
     if (comment.user.toString() !== user.id) {
       throw new Error('Only the author of the comment can delete it.');
     }
@@ -70,7 +70,7 @@ export const deleteComment = asyncHandler(
       await post.save({ session });
       await session.commitTransaction();
       await session.endSession();
-      res.json({ message: 'Comment deleted' });
+      res.json({ commentCounter: post.commentCounter });
       return;
     } catch (error) {
       await session.abortTransaction();
@@ -78,29 +78,6 @@ export const deleteComment = asyncHandler(
       console.log(error);
       throw new Error('Error deleting the comment');
     }
-  }
-);
-
-// @route GET /api/post/:id/comment/
-// @acess Private
-export const getCommentsForPost = asyncHandler(
-  async (req: Request, res: Response) => {
-    const postId = req.params.id;
-    if (!postId) {
-      throw new Error('Missing or invalid post id');
-    }
-    const post = await Post.findById(postId);
-    if (!post) {
-      throw new Error('Missing or invalid post id');
-    }
-    const comments = await Comment.find({ post: postId })
-      .sort({ date: 'desc' })
-      .populate({
-        path: 'User',
-        select: 'username _id',
-      });
-    res.json(comments);
-    return;
   }
 );
 
@@ -114,4 +91,15 @@ export const searchComment = async (id: string): Promise<IComment> => {
     throw new Error('Comment not found, invalid comment id');
   }
   return comment;
+};
+
+// @desc Return if exists the comments for one post, postId(searchPost) must be validated before
+export const getCommentsForPost = async (postId: string) => {
+  const comments: IComment[] | null = await Comment.find({ post: postId })
+    .sort({ date: 'desc' })
+    .populate({
+      path: 'user',
+      select: 'username _id',
+    });
+  return comments;
 };

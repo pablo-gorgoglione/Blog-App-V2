@@ -25,8 +25,6 @@ async function paginatePosts<ModelType>(
   const limit = req.query.limit ? +req.query.limit : 5;
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
-  // console.log(await model.countDocuments().exec());
-  // console.log(endIndex);
   if (endIndex < (await model.countDocuments().exec())) {
     paginatedResults.next = {
       page: page + 1,
