@@ -62,6 +62,41 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   return;
 });
 
+// @route PUT /api/users/:id
+// @acess Private/Admin
+export const putUserRole = asyncHandler(async (req: Request, res: Response) => {
+  const { isAdmin = false } = req.body;
+  if (typeof isAdmin !== 'undefined') {
+    throw new Error('Missing value');
+  }
+  if (typeof isAdmin !== 'boolean') {
+    throw new Error('Value must be boolean.');
+  }
+  const user = await searchUserById(req.params.id);
+  user.isAdmin = isAdmin;
+  await user.save();
+  const { password, ...restOfUser } = user.toJSON();
+  res.json(restOfUser);
+  return;
+});
+
+// @route PUT /api/users/:id
+// @acess Private/Admin
+export const putUser = asyncHandler(async (req: Request, res: Response) => {
+  const { password: pw, username } = req.body;
+  const user = await searchUser(req);
+  if (pw) {
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(pw, salt);
+    user.password = hashPassword;
+  }
+  user.username = username ? username : user.username;
+  await user.save();
+  const { password, ...restOfUser } = user.toJSON();
+  res.json(restOfUser);
+  return;
+});
+
 // @desc Return an User or throws an error for invalid id
 export const searchUser = async (req: Request): Promise<IUser> => {
   const userId = req.user ? req.user.id : '';
@@ -69,6 +104,17 @@ export const searchUser = async (req: Request): Promise<IUser> => {
     throw new Error('Missing or invalid token');
   }
   const user: IUser | null = await User.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+  return user;
+};
+
+export const searchUserById = async (id: string): Promise<IUser> => {
+  if (!id) {
+    throw new Error('Missing user id');
+  }
+  const user: IUser | null = await User.findById(id);
   if (!user) {
     throw new Error('User not found');
   }
