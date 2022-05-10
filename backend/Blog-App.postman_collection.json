@@ -1,0 +1,546 @@
+{
+	"info": {
+		"_postman_id": "4f17eda5-6787-455a-a528-d1609d2b6deb",
+		"name": "Blog-App",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Comment",
+			"item": [
+				{
+					"name": "POST /posts/:id/comments/",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"comment_id\", pm.response.json().comment._id)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"content\":\"A comment\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}/comments",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /posts/:id/comments/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}/comments/{{comment_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}",
+								"comments",
+								"{{comment_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Posts",
+			"item": [
+				{
+					"name": "GET /posts?page=1&limit=5",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"post_id\", pm.response.json().results[0]._id)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2MTkzZmNiMDI1N2IxZDViNDJmYTI2MTkiLCJpYXQiOjE2MzcwODg4OTg0NjIsImV4cCI6MTYzNzA4ODk4NDg2Mn0.FCEWw5ZtfQKtznqLzUhp3kdziVy7kGF79YfAipIDvuSUbvcvuDUEBNKu_rGm8p4Mr-46v2l51w-DOA3S4ps7uyV1Mpu9aq9cC5PpU5JyC_-qWYmYtCaB35A4afRBK8Iz21TM1s1ajs9esCmh6Z1VT1exkT_kipopa1fqxP4TFZQBmgZfZj8SU-9EKKSxLhBbugEipgAVAjDuWEBYxiMudi1qwujNDSDTY1PNu6ttR_JJqYLL_vyDUpCf58oLDto7DzVVilb2Jldb3kiTfzvs_vZQFYC4h7M4x0h4nQq5skqSyQYwxW6tIru4-jijObK6A1y8GD4Hq-Oblgzk-wK-eLDsPFvb_p6hggakM00zbtsvjME5VUotQZR9TVqu-Bf-QB28xiUEMrcuIaNfhSOZIr6S1C8SCHoSjtHxuV-9uzuYQEvN2Fj5tcLOiqA0ebBqMRywpzs-ti_4FY91RCSLuxu0TuOQPMwAKE7rotJpHoBtOf2_lJCp2K_IAGEro6umsHI3U6Ffl8MzYCtA3lTJigUvw40tLFL6VqrMhuwz39w6r9F3HxPKNOIqdctjRuLgGRCMLdZgOYAPqRDynK_1Q8KA5BUsrjwUh0xDdgww3Xr_L6PzLmQh_86jA_a6AizQ9c_vroMxRHmZ9Jrtrl3N4lSXcKvVAFCqJmuufEzbTRA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": " ",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}/posts?page=1&limit=1",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /post/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"This is a new post\",\n    \"content\": \"post created via postman\",\n    \"tags\": [\"typescript\",\"nodejs\",\"postman\"],\n    \"isPublished\": true\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}/posts/",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /post/:id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"console.log(\"PUT with id\", pm.collectionVariables.get('post_id'))"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{           \n            \"title\": \"this is an updated post\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /posts/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /posts/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "POST(register) /users/",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"Pablo\",\n    \"password\":\"12345\",\n    \"isAdmin\":true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}/users/",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /users/login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"user_token\", pm.response.json().token)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\":\"Pablooa\",\n    \"password\":\"12345\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}/users/login",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET /users/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/users/",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Like",
+			"item": [
+				{
+					"name": "POST /posts/:id/like",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}/like",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /posts/:id/like",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}/like/",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}",
+								"like",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST /posts/:id/comments/:id/like",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}/comments/{{comment_id}}/like",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}",
+								"comments",
+								"{{comment_id}}",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /posts/:id/comments/:id/like",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{api_url}}/posts/{{post_id}}/comments/{{comment_id}}/like",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"posts",
+								"{{post_id}}",
+								"comments",
+								"{{comment_id}}",
+								"like"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{user_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "user_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "post_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "comment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "like_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "api_url",
+			"value": "http://localhost:4500/api",
+			"type": "string"
+		}
+	]
+}
