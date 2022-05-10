@@ -127,7 +127,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{api_url}}/posts?page=1&limit=1",
+							"raw": "{{api_url}}/posts?page=1&limit=5",
 							"host": [
 								"{{api_url}}"
 							],
@@ -141,7 +141,7 @@
 								},
 								{
 									"key": "limit",
-									"value": "1"
+									"value": "5"
 								}
 							]
 						}
@@ -150,6 +150,18 @@
 				},
 				{
 					"name": "POST /post/",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"post_id\", pm.response.json()._id)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -165,7 +177,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"title\": \"This is a new post\",\n    \"content\": \"post created via postman\",\n    \"tags\": [\"typescript\",\"nodejs\",\"postman\"],\n    \"isPublished\": true\n}\n",
+							"raw": "{\n    \"title\": \"This is a new postasdasda sda sdas\",\n    \"content\": \"post created via postman\",\n    \"tags\": [\"typescript\",\"nodejs\",\"postman\"],\n    \"isPublished\": true\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -329,7 +341,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\":\"Pablooa\",\n    \"password\":\"12345\"\n}",
+							"raw": "{\n    \"username\":\"Pablo\",\n    \"password\":\"12345\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -351,6 +363,18 @@
 				},
 				{
 					"name": "GET /users/",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.collectionVariables.set(\"user_id\", pm.response.json()[1]._id)\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -362,8 +386,82 @@
 								}
 							]
 						},
-						"method": "POST",
+						"method": "GET",
 						"header": [],
+						"url": {
+							"raw": "{{api_url}}/users/",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"users",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /users/:id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"isAdmin\":true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}/users/{{user_id}}",
+							"host": [
+								"{{api_url}}"
+							],
+							"path": [
+								"users",
+								"{{user_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /users/",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\":\"trololo\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
 						"url": {
 							"raw": "{{api_url}}/users/",
 							"host": [
@@ -444,6 +542,16 @@
 				{
 					"name": "POST /posts/:id/comments/:id/like",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"url": {
@@ -540,6 +648,11 @@
 		{
 			"key": "api_url",
 			"value": "http://localhost:4500/api",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
 			"type": "string"
 		}
 	]
