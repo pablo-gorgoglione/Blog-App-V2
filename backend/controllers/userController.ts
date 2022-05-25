@@ -4,7 +4,12 @@ import { Response, Request } from 'express';
 import User from '../models/user';
 import generateToken from '../utils/userUtils';
 import { IUser } from '../types';
-
+interface UserToSend {
+  id: string;
+  username: string;
+  token: string;
+  isAdmin: boolean;
+}
 // @route POST /api/users/
 // @acess Public
 export const register = asyncHandler(async (req: Request, res: Response) => {
@@ -35,15 +40,18 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).select(
+    '-createdAt -updatedAt -__v'
+  );
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    const { password, ...userWithoutPassword } = user.toJSON();
-    //if there is a user with the email, and the password match then:
-    res.status(200).json({
-      ...userWithoutPassword,
+    const userToSend: UserToSend = {
+      id: user._id,
+      username: user.username,
+      isAdmin: user.isAdmin,
       token: generateToken(user.id),
-    });
+    };
+    res.status(200).json(userToSend);
     return;
   }
   res.status(401);

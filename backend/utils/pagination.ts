@@ -42,12 +42,15 @@ async function paginatePosts<ModelType>(
   }
   paginatedResults.results = await model
     .find({ isPublished: true })
+    .select('-createdAt -updatedAt -__v -isPublished -author')
     .sort({
       createdAt: 'desc',
     })
     .limit(limit)
     .skip(startIndex)
+    .populate({ path: 'likes', select: 'user' })
     .exec();
+
   return paginatedResults;
 }
 

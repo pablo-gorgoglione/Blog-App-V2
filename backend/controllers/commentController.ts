@@ -17,12 +17,8 @@ export const postComment = asyncHandler(async (req: Request, res: Response) => {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    //Updates the commentCounter on post
-    post.commentCounter = post.commentCounter + 1;
-    await post.save({ session });
-
     //Create the comment
-    const comment = await Comment.create(
+    const [comment] = await Comment.create(
       [
         {
           user: user.id,
@@ -32,15 +28,15 @@ export const postComment = asyncHandler(async (req: Request, res: Response) => {
       ],
       { session }
     );
+    post.comments.push(comment._id);
+    await post.save({ session });
 
     //Commit transaction
     await session.commitTransaction();
     await session.endSession();
-
+    await comment.populate({ path: 'user', select: 'username' });
     // the Comment.create returns an array<Comment> and so the comment[0]
-    res
-      .status(201)
-      .json({ comment: comment[0], commentCounter: post.commentCounter });
+    res.status(201).json(comment.toJSON());
   } catch (error) {
     console.log(error);
     await session.abortTransaction();
@@ -65,12 +61,14 @@ export const deleteComment = asyncHandler(
     const session = await mongoose.startSession();
     await session.startTransaction();
     try {
+      post.comments = post.comments.filter((c) => {
+        c.id !== comment.id;
+      });
       await comment.delete(session);
-      post.commentCounter = post.commentCounter - 1;
       await post.save({ session });
       await session.commitTransaction();
       await session.endSession();
-      res.json({ commentCounter: post.commentCounter });
+      res.json(post);
       return;
     } catch (error) {
       await session.abortTransaction();

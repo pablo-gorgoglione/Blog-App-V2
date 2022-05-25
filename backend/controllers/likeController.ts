@@ -2,7 +2,6 @@ import asyncHandler from 'express-async-handler';
 import { Response, Request } from 'express';
 import mongoose from 'mongoose';
 import Like from '../models/like';
-import Comment from '../models/comment';
 import { searchUser } from './userController';
 import { searchPost } from './postController';
 import { searchComment } from './commentController';
@@ -21,30 +20,25 @@ export const postLikeOnPost = asyncHandler(
     /* END   - PromiseAll */
 
     const session = await mongoose.startSession();
-    1;
     await session.startTransaction();
 
     try {
-      // Update post - likeCounter +1
-      post.likeCounter = post.likeCounter + 1;
-
-      // Update user - likePosts +1 - push postId
-      user.likedPosts = [...user.likedPosts, post._id];
       // Create like
 
       /* BEGIN - PromiseAll */
-      await post.save({ session });
       await user.save({ session });
       const like = await Like.create([{ user: user._id, post: post._id }], {
         session,
       });
+      post.likes.push(like[0]._id);
+      await post.save({ session });
       /* END   - PromiseAll */
 
       await session.commitTransaction();
       await session.endSession();
-      res
-        .status(201)
-        .json({ likeCounter: post.likeCounter, likedPosts: user.likedPosts });
+      await post.populate({ path: 'likes', select: 'user' });
+
+      res.status(201).json(post);
       return;
     } catch (error) {
       await session.abortTransaction();
@@ -71,10 +65,10 @@ export const deleteLikeOnPost = asyncHandler(
     await session.startTransaction();
 
     try {
-      post.likeCounter = post.likeCounter - 1;
-      user.likedPosts = user.likedPosts.filter(
-        (lp) => lp.toString() !== post.id
-      );
+      post.likes = post.likes.filter((l) => {
+        l.id !== like.id;
+      });
+      // post.likeCounter = post.likeCounter - 1;
 
       /* PromiseAll */
       await post.save({ session });
@@ -84,9 +78,9 @@ export const deleteLikeOnPost = asyncHandler(
 
       await session.commitTransaction();
       await session.endSession();
-      res
-        .status(200)
-        .json({ likeCounter: post.likeCounter, likedPosts: user.likedPosts });
+      await post.populate({ path: 'likes', select: 'user' });
+
+      res.status(200).json(post);
       return;
     } catch (error) {
       await session.abortTransaction();
@@ -119,29 +113,21 @@ export const postLikeOnComment = asyncHandler(
     await session.startTransaction();
 
     try {
-      // Update Comment - likeCounter +1
-      comment.likeCounter = comment.likeCounter + 1;
-
-      // Update user - likePosts +1 - push postId
-      user.likedComments = [...user.likedComments, comment._id];
-
       /* PromiseAll */
-      await comment.save({ session });
-      await user.save({ session });
-      await Like.create(
+      const like = await Like.create(
         [{ user: user._id, post: post._id, comment: comment._id }],
         {
           session,
         }
       );
+      comment.likes.push(like[0]._id);
+      await comment.save({ session });
+      await user.save({ session });
       /* PromiseAll */
 
       await session.commitTransaction();
       await session.endSession();
-      res.status(201).json({
-        likeCounter: comment.likeCounter,
-        likedComments: user.likedComments,
-      });
+      res.status(201).json({ message: 'Like created succesfully', comment });
       return;
     } catch (error) {
       await session.abortTransaction();
@@ -174,12 +160,10 @@ export const deleteLikeOnComment = asyncHandler(
 
     try {
       // Update post - likeCounter -1
-      comment.likeCounter = comment.likeCounter - 1;
-
+      comment.likes = comment.likes.filter((l) => {
+        l.id !== like.id;
+      });
       // Update user - likePosts -1 - filter postId
-      user.likedComments = user.likedComments.filter(
-        (lc) => lc.toString() !== comment.id
-      );
 
       /* PromiseAll */
       await comment.save({ session });
@@ -189,10 +173,7 @@ export const deleteLikeOnComment = asyncHandler(
 
       await session.commitTransaction();
       await session.endSession();
-      res.json({
-        likeCounter: comment.likeCounter,
-        likedComments: user.likedComments,
-      });
+      res.json(post);
       return;
     } catch (error) {
       await session.abortTransaction();

@@ -10,8 +10,6 @@ const UserSchema: Schema = new Schema(
     },
     password: { type: String, required: true },
     isAdmin: { type: Boolean },
-    likedPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
-    likedComments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
   },
   { timestamps: true }
 );

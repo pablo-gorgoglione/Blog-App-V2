@@ -4,8 +4,6 @@ export interface IUser extends Document {
   username: string;
   password: string;
   isAdmin: boolean;
-  likedPosts: Array<string>;
-  likedComments: Array<string>;
 }
 
 export interface IPost extends Document {
@@ -14,15 +12,16 @@ export interface IPost extends Document {
   content: string;
   tags: Array<string>;
   isPublished: boolean;
-  likeCounter: number;
-  commentCounter: number;
+  likes: Array<ILike>;
+  comments: Array<IComment>;
+  // commentCounter?: number;
 }
 
 export interface IComment extends Document {
   user: string;
   post: string;
   content: string;
-  likeCounter: number;
+  likes: Array<ILike>;
 }
 
 export interface ILike extends Document {
